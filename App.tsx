@@ -496,7 +496,7 @@ const App: React.FC = () => {
                     </InputGroup>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <InputGroup label="Report ID" icon="fa-hashtag">
-                        <input type="text" name="reportNumber" value={report.reportNumber} readOnly className="w-full px-5 py-3.5 bg-slate-100 border border-slate-200 rounded-2xl font-bold text-slate-500 cursor-not-allowed" />
+                        <input type="text" name="reportNumber" value={report.reportNumber} onChange={handleInputChange} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-amber-500 outline-none transition-all font-bold text-slate-900" />
                       </InputGroup>
                       <InputGroup label="Category" icon="fa-folder">
                         <select name="category" value={report.category} onChange={handleInputChange} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-amber-500 outline-none transition-all font-bold">
