@@ -1,3 +1,4 @@
+export type RiskLevel = 'None' | 'Low' | 'Moderate' | 'High';
 
 export enum SellerLevel {
   BEGINNER = 'Beginner',
@@ -9,6 +10,13 @@ export enum CompetitionLevel {
   LOW = 'Low',
   MEDIUM = 'Medium',
   HIGH = 'High'
+}
+
+export enum DemandLevel {
+  LOW = 'Low / Declining',
+  MODERATE = 'Moderate / Stable',
+  HIGH = 'High / Rising',
+  RISING = 'Rising rapidly'
 }
 
 export enum RankingDifficulty {
@@ -29,15 +37,46 @@ export enum DemandType {
   YEAR_ROUND = 'Year-Round Demand'
 }
 
+export enum SeasonalityType {
+  YEAR_ROUND = 'Year-Round',
+  SEASONAL = 'Seasonal',
+  TRENDS = 'Trends',
+  NEW_TREND = 'New Trend'
+}
+
 export enum TrendStatus {
   TRENDING = 'Trending',
   NOT_TRENDING = 'Not Trending'
+}
+
+export interface CompetitorData {
+  asin: string;
+  brand: string;
+  avgUnitSales: string;
+  clickCount: string;
+  clickShare: string;
+  conversionShare: string;
+  avgSellingPrice: string;
+  numberOfReviews: string;
+  launchDate: string;
+  listingAge: string;
+}
+
+export interface TopRelatedKeyword {
+  keyword: string;
+  searchVolume: string;
+  salesMonthly: string;
+  competingProducts: string;
+  titleDensity: string;
+  clickShare: string;
+  conversionShare: string;
 }
 
 export interface KeywordReport {
   reportNumber: string;
   keyword: string;
   category: string;
+  subCategory: string;
   opportunityScore: number;
   monthlySearchVolume: number;
   estimatedMonthlySales: number;
@@ -49,14 +88,6 @@ export interface KeywordReport {
   competitorsCount: number;
   reviews: string;
   sellerLevel: SellerLevel;
-  exclusiveReason: string;
-  exclusiveLogicTags: string[];
-  ownershipValue: string;
-  ownershipValueTags: string[];
-  keyAdvantage: string;
-  keyAdvantageTags: string[];
-  mainRisk: string;
-  mainRiskTags: string[];
   // Financial & Structural metrics
   sellingPrice: number;
   estimatedCostPrice: number;
@@ -76,15 +107,147 @@ export interface KeywordReport {
   supplierUrl: string;
   // Visual Evidence (Base64 or URLs)
   productImageUrl: string;
+  productImageUrl2: string;
   keepaImageUrl: string;
   keepaNotes: string;
   helium10ImageUrl: string;
   helium10Notes: string;
   searchVolumeImageUrl: string;
   searchVolumeNotes: string;
-  // Competitor Analysis
-  competitorIssues: string[];
-  competitorAnalysis: string;
+  xrayProductResearchImageUrl: string;
+  xrayProductResearchNotes: string;
+  // Market Analysis Proof fields
+  amazonSearchDataImageUrl: string;
+  amazonSearchDataNotes: string;
+  amazonInsightsTrendsImageUrl: string;
+  amazonInsightsTrendsNotes: string;
+  amazonSearchNicheImageUrl: string;
+  amazonSearchNicheNotes: string;
+  amazonTopClickedProductsImageUrl: string;
+  amazonTopClickedProductsNotes: string;
+  amazonReturnsInsightsImageUrl: string;
+  amazonReturnsInsightsNotes: string;
+  // Executive Dashboard specific fields
+  demandLevel: DemandLevel;
+  netProfitMargin: number;
+  monthlyRevenue: number;
+  totalRevenue: number;
+  estimatedMonthlyRevenueTop10Avg: number;
+  totalActiveListing: number;
+  activeSellersPage1: number;
+  insight: string;
+  // Market Intelligence & Keywords specific fields
+  mainKeyword: string;
+  sellerType: string;
+  marketReach: string;
+  marketShare: number;
+  avgBSR: number;
+  avgMonthlySalesTop10: number;
+  // Market Behavior & Efficiency specific fields
+  // Market Behavior & Efficiency
+  marketSize: string;
+  demandGrowthRate: string;
+  seasonalityPattern: SeasonalityType;
+  seasonalityPeak1: string;
+  seasonalityPeak2: string;
+  seasonalityPeakVolume: string;
+  seasonalityOffPeak1: string;
+  seasonalityOffPeak2: string;
+  seasonalityOffPeakVolume: string;
+  conversionRate: string;
+  avgOutOfStock: string;
+  avgListingAge: string;
+  competitiveConcentration: string;
+  clickShareTop5: string;
+  activeBrandsCount: string;
+  brandEntriesYoY: string;
+  winningFormula: string;
+  winningFormulaTechnical: string;
+  winningFormulaContent: string;
+  winningFormulaComponents: string;
+  winningFormulaPrice: string;
+  // Competition Analysis specific fields
+  averageRating: string;
+  sellersUnder75Reviews: string;
+  pageResultType: string;
+  amazonSellingListing: string;
+  amazonDominancy: string;
+  opportunityGap: string;
+  topCompetitorsList: CompetitorData[];
+  topCompetitorsAverage: Partial<CompetitorData>;
+  // Keyword Analysis fields
+  highIntentBuyerKeywords: string;
+  longTailOpportunities: string;
+  topRelatedKeywordsList: TopRelatedKeyword[];
+  topRelatedKeywordsTotal: Partial<TopRelatedKeyword>;
+  // Product Qualification Checklist fields
+  isNonSeasonal: boolean;
+  isNotFragile: boolean;
+  isNotRestricted: boolean;
+  isTargetPriceInRange: boolean;
+  isReasonableSizeWeight: boolean;
+  isLowIPRisk: boolean;
+  isClearDifferentiation: boolean;
+  isNoCertificationRequired: boolean;
+  // Opportunity Indicators fields
+  isStrongSearchDemand: boolean;
+  isRecentSuccessfulLaunches: boolean;
+  isNewSellersTraction: boolean;
+  isFragmentedCompetition: boolean;
+  isLowReviewBarrier: boolean;
+  isWeakCompetitorListings: boolean;
+  isQualityComplaintsFound: boolean;
+  isOverpricedCompetitors: boolean;
+  isClearImprovementOpp: boolean;
+  isHealthyPriceRange: boolean;
+  // Risk Indicators fields
+  riskReviewBarrier: boolean;
+  riskBrandPresence: boolean;
+  riskMarketSaturation: boolean;
+  riskProfitMargins: boolean;
+  riskPriceWar: boolean;
+  riskManufacturing: boolean;
+  riskReturnRate: boolean;
+  riskPatentIP: boolean;
+  riskCategoryGating: boolean;
+  riskCertifications: boolean;
+  riskSeasonality: boolean;
+  riskPPCCost: boolean;
+  // Execution Strategy fields
+  execPPCStrategy: string;
+  execConversionOpt: string;
+  execPositioning: string;
+  execEarlyReviews: string;
+  execPricingStrategy: string;
+  // Review Analysis fields
+  keyInsights: string;
+  positiveDrivers: string;
+  improvementAreas: string;
+  marketSignal: string;
+  opportunityInsight: string;
+  reviewAnalysisPasteText?: string;
+  // Niche Analysis fields
+  nicheDescription: string;
+  nicheKeyInsights: string;
+  nicheOpportunitySignal: string;
+  nicheAnalysisPasteText?: string;
+  // Profitability & Unit Economics fields
+  targetSellingPrice: number;
+  productCostFactory: number;
+  shippingCostSea: number;
+  amazonReferralFee: number;
+  amazonFbaFees: number;
+  ppcCostEstimate: number;
+  totalCostPerUnit: number;
+  netProfitPerUnit: number;
+  netMarginPercentage: number;
+  roiPercentage: number;
+  initialInvestment: number;
+  estimatedUnitsPurchased: number;
+  // Dashboard additions
+  sellersOver5kRevenue?: string;
+  avgReviewCount?: number;
+  activeAsinsForListings?: string[];
 }
 
 export interface AIAnalysis {
