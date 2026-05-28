@@ -148,6 +148,8 @@ const INITIAL_REPORT: KeywordReport = {
   amazonTopClickedProductsNotes: '',
   amazonReturnsInsightsImageUrl: '',
   amazonReturnsInsightsNotes: '',
+  othersImageUrl: '',
+  othersNotes: '',
   demandLevel: DemandLevel.HIGH,
   netProfitMargin: 25,
   monthlyRevenue: 15000,
@@ -2013,7 +2015,7 @@ const App: React.FC = () => {
                   <span className="bg-amber-100 text-amber-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">13</span>
                   Data Validation
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <div className="space-y-3">
                     <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest block text-center truncate">1. Keepa Data Historical</label>
                     <ImageDropzone
@@ -2068,6 +2070,17 @@ const App: React.FC = () => {
                       className="h-48"
                     />
                     <input type="text" name="amazonSearchDataNotes" value={report.amazonSearchDataNotes} onChange={handleInputChange} placeholder="Notes..." className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-[11px] font-bold outline-none shadow-sm" />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest block text-center truncate">6. Others</label>
+                    <ImageDropzone
+                      label="Others"
+                      icon="fa-folder-open"
+                      currentImage={report.othersImageUrl}
+                      onUpload={(data) => updateImageField('othersImageUrl', data)}
+                      className="h-48"
+                    />
+                    <input type="text" name="othersNotes" value={report.othersNotes} onChange={handleInputChange} placeholder="Notes..." className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-[11px] font-bold outline-none shadow-sm" />
                   </div>
                 </div>
               </div>

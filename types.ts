@@ -127,6 +127,8 @@ export interface KeywordReport {
   amazonTopClickedProductsNotes: string;
   amazonReturnsInsightsImageUrl: string;
   amazonReturnsInsightsNotes: string;
+  othersImageUrl: string;
+  othersNotes: string;
   // Executive Dashboard specific fields
   demandLevel: DemandLevel;
   netProfitMargin: number;

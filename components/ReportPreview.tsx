@@ -1665,6 +1665,45 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
         <PageFooter page={nextP()} />
       </div>
 
+      {/* --- PAGE: DATA VALIDATION (OTHERS) --- */}
+      {report.othersImageUrl && (
+        <div className="a4-page flex flex-col h-full">
+          <PageHeader />
+          <section className="flex-1 space-y-4 print:space-y-4">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+              <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+                13. Data Validation (Others)
+              </h2>
+            </div>
+            <div className="space-y-4 print:space-y-2">
+              <div className="break-inside-avoid space-y-2 print:space-y-1">
+                <div className="flex items-center gap-3 px-2">
+                  <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-amber-500 border border-slate-100">
+                    <i className="fa-solid fa-folder-open text-xs"></i>
+                  </div>
+                  <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Others</h4>
+                </div>
+                <div className="w-full bg-slate-50 rounded-[2.5rem] border border-slate-100 overflow-hidden flex flex-col p-4 md:p-6 print:p-2 bg-gradient-to-b from-slate-50 to-white shadow-sm">
+                  <img
+                    src={report.othersImageUrl}
+                    alt="Others"
+                    className="w-full h-auto max-h-[500px] print:max-h-[400px] shadow-lg object-contain rounded-3xl border border-slate-100/50 mx-auto"
+                  />
+                  {report.othersNotes && (
+                    <div className="mt-4 px-6 py-4 bg-white border border-slate-100 rounded-2xl italic text-[11px] text-slate-600 font-medium leading-relaxed shadow-sm">
+                      <i className="fa-solid fa-comment-dots mr-2 text-amber-500/50"></i>
+                      "{report.othersNotes}"
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+          <PageFooter page={nextP()} />
+        </div>
+      )}
+
       {/* --- PAGE 15: REGULATORY REFERENCE & DISCLAIMER --- */}
       <div className="a4-page flex flex-col h-full">
         <PageHeader />
