@@ -42,12 +42,44 @@ const HeroSparkline: React.FC<{ color?: string }> = ({ color = 'bg-amber-400' })
 };
 
 export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
+  let pageNum = 0;
+  const nextP = () => {
+    pageNum += 1;
+    return pageNum;
+  };
+
+  const chunkArray = <T,>(arr: T[], size: number): T[][] => {
+    const chunks: T[][] = [];
+    if (!arr) return chunks;
+    for (let i = 0; i < arr.length; i += size) {
+      chunks.push(arr.slice(i, i + size));
+    }
+    return chunks;
+  };
+
+  const asinChunks = chunkArray(report.activeAsinsForListings || [], 50);
+  const keywordChunks = chunkArray(report.topRelatedKeywordsList && report.topRelatedKeywordsList.length > 0 ? report.topRelatedKeywordsList : [{} as any], 18);
+
   const formatKValue = (val: string | undefined): string => {
     if (!val) return '';
     return val.replace(/\d+/g, (match) => {
       const num = parseInt(match, 10);
-      return num >= 1000 ? (num / 1000) + 'k' : match;
+      if (num >= 1000000) {
+        const formatted = (num / 1000000).toFixed(1);
+        return formatted.endsWith('.0') ? formatted.slice(0, -2) + 'M' : formatted + 'M';
+      }
+      if (num >= 1000) {
+        const formatted = (num / 1000).toFixed(1);
+        return formatted.endsWith('.0') ? formatted.slice(0, -2) + 'k' : formatted + 'k';
+      }
+      return match;
     });
+  };
+
+  const formatPrice = (price: string | number | undefined): string => {
+    if (!price) return '$0';
+    const clean = String(price).trim();
+    return clean.startsWith('$') ? clean : `$${clean}`;
   };
 
   const calculateTop5ClickShare = () => {
@@ -447,7 +479,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
             </div>
           </section>
 
-          <PageFooter page={1} />
+          <PageFooter page={nextP()} />
         </div>
       </div>
 
@@ -585,8 +617,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
                         <td className="px-2 py-2.5 font-black text-slate-900 text-center">{comp.avgUnitSales || '0'}</td>
                         <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{comp.clickCount || '0'}</td>
                         <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{comp.clickShare || '0%'}</td>
-
-                        <td className="px-2 py-2.5 font-black text-slate-900 text-center">${comp.avgSellingPrice || '0'}</td>
+                        <td className="px-2 py-2.5 font-black text-slate-900 text-center">{formatPrice(comp.avgSellingPrice)}</td>
                         <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{comp.numberOfReviews || '0'}</td>
                         <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{comp.listingAge || '0'}</td>
                       </tr>
@@ -597,8 +628,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
                       <td className="px-2 py-3.5 text-center text-emerald-400 text-[14px]">{report.topCompetitorsAverage.avgUnitSales || '0'}</td>
                       <td className="px-2 py-3.5 text-center text-[14px]">{report.topCompetitorsAverage.clickCount || '0'}</td>
                       <td className="px-2 py-3.5 text-center text-[14px]">{report.topCompetitorsAverage.clickShare || '0%'}</td>
-
-                      <td className="px-2 py-3.5 text-center text-emerald-400 text-[14px]">${report.topCompetitorsAverage.avgSellingPrice || '0'}</td>
+                      <td className="px-2 py-3.5 text-center text-emerald-400 text-[14px]">{formatPrice(report.topCompetitorsAverage.avgSellingPrice)}</td>
                       <td className="px-2 py-3.5 text-center text-[14px]">{report.topCompetitorsAverage.numberOfReviews || '0'}</td>
                       <td className="px-2 py-3.5 text-center text-[14px]">{report.topCompetitorsAverage.listingAge || '—'}</td>
                     </tr>
@@ -612,170 +642,290 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
 
           </div>
         </section>
-        <PageFooter page={2} />
+        <PageFooter page={nextP()} />
       </div>
 
-      {/* --- PAGE 6: KEYWORD ANALYSIS --- */}
-      <div className="a4-page flex flex-col h-full">
-        <PageHeader />
-        <section className="flex-1 space-y-6">
-          {/* ALL ASINS Table (New) */}
-          {report.activeAsinsForListings && report.activeAsinsForListings.length > 0 && (
-            <div className="w-full mb-4">
-              <h4 className="text-sm font-black text-[#1e1b4b] mb-4 flex items-center justify-center gap-2 tracking-tight uppercase">
-                <i className="fa-solid fa-list-check text-indigo-500"></i>
-                All ASINs for Active Listings
-              </h4>
-              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                <table className="w-full border-collapse text-left text-[9.5px] table-fixed">
-                  <thead>
-                    <tr className="bg-slate-900 text-white border-b border-slate-700">
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <th key={i} className="px-2 py-2.5 font-black text-white text-center uppercase tracking-widest text-[8.5px] opacity-90 border-x border-slate-800 first:border-l-0 last:border-r-0">ASIN</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      const totalAsins = report.activeAsinsForListings || [];
-                      const numRows = Math.max(5, Math.ceil(totalAsins.length / 5));
-                      return Array.from({ length: numRows }).map((_, rowIndex) => (
-                        <tr key={rowIndex} className="border-b border-slate-100 last:border-0 even:bg-slate-50/60 hover:bg-indigo-50/40 transition-colors font-bold text-slate-900">
-                          {[0, 1, 2, 3, 4].map(colIndex => {
-                            const asinIndex = rowIndex + (colIndex * numRows);
-                            const asin = totalAsins[asinIndex] || '';
-                            const displayNum = asinIndex + 1;
-                            return (
-                              <td key={colIndex} className="p-1 text-center font-bold text-slate-900 break-all border-x border-slate-100 first:border-l-0 last:border-r-0">
-                                <div className="flex items-center justify-between gap-1 px-1">
-                                  <span className="text-[7px] text-slate-300 w-3 shrink-0">{asin ? displayNum : ''}</span>
-                                  <span className="flex-1 text-center">
-                                    {asin ? (
-                                      <a
-                                        href={`https://www.amazon.com/dp/${asin.trim()}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-slate-700 hover:text-indigo-600 transition-colors"
-                                      >
-                                        {asin}
-                                      </a>
-                                    ) : '—'}
-                                  </span>
-                                </div>
+      {/* --- ASINs & KEYWORDS CONDITIONAL SEPARATION --- */}
+      {(() => {
+        const activeAsinsCount = (report.activeAsinsForListings || []).length;
+        const topKeywordsCount = (report.topRelatedKeywordsList || []).length;
+        const shouldSeparate = activeAsinsCount > 40 && topKeywordsCount > 15;
+
+        if (shouldSeparate) {
+          return (
+            <>
+              {/* Dedicated Page for ASINs */}
+              {report.activeAsinsForListings && report.activeAsinsForListings.length > 0 && (
+                <div className="a4-page flex flex-col h-full">
+                  <PageHeader />
+                  <section className="flex-1 space-y-6">
+                    <div className="w-full">
+                      <h4 className="text-sm font-black text-[#1e1b4b] mb-4 flex items-center justify-center gap-2 tracking-tight uppercase">
+                        <i className="fa-solid fa-list-check text-indigo-500"></i>
+                        All ASINs for Active Listings
+                      </h4>
+                      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                        <table className="w-full border-collapse text-left text-[9.5px] table-fixed">
+                          <thead>
+                            <tr className="bg-slate-900 text-white border-b border-slate-700">
+                              {[1, 2, 3, 4, 5].map(i => (
+                                <th key={i} className="px-2 py-2.5 font-black text-white text-center uppercase tracking-widest text-[8.5px] opacity-90 border-x border-slate-800 first:border-l-0 last:border-r-0">ASIN</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(() => {
+                              const totalAsins = report.activeAsinsForListings || [];
+                              const numRows = Math.max(5, Math.ceil(totalAsins.length / 5));
+                              return Array.from({ length: numRows }).map((_, rowIndex) => (
+                                <tr key={rowIndex} className="border-b border-slate-100 last:border-0 even:bg-slate-50/60 hover:bg-indigo-50/40 transition-colors font-bold text-slate-900">
+                                  {[0, 1, 2, 3, 4].map(colIndex => {
+                                    const asinIndex = rowIndex + (colIndex * numRows);
+                                    const asin = totalAsins[asinIndex] || '';
+                                    const displayNum = asinIndex + 1;
+                                    return (
+                                      <td key={colIndex} className="p-1 text-center font-bold text-slate-900 break-all border-x border-slate-100 first:border-l-0 last:border-r-0">
+                                        <div className="flex items-center justify-between gap-1 px-1">
+                                          <span className="text-[7px] text-slate-300 w-3 shrink-0">{asin ? displayNum : ''}</span>
+                                          <span className="flex-1 text-center">
+                                            {asin ? (
+                                              <a
+                                                href={`https://www.amazon.com/dp/${asin.trim()}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-slate-700 hover:text-indigo-600 transition-colors"
+                                              >
+                                                {asin}
+                                              </a>
+                                            ) : '—'}
+                                          </span>
+                                        </div>
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              ));
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </section>
+                  <PageFooter page={nextP()} />
+                </div>
+              )}
+
+              {/* Dedicated Page for Keywords */}
+              <div className="a4-page flex flex-col h-full">
+                <PageHeader />
+                <section className="flex-1 space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+                      4. Keyword Analysis
+                    </h2>
+                  </div>
+
+                  <div className="w-full mt-4">
+                    <h4 className="text-sm font-black text-[#1e1b4b] mb-4 flex items-center justify-center gap-2 tracking-tight uppercase">
+                      <i className="fa-solid fa-tags text-indigo-500"></i>
+                      Top Related Keywords
+                    </h4>
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                      <table className="w-full border-collapse text-left text-[11px] leading-tight table-fixed font-medium">
+                        <thead className="bg-slate-900 text-white">
+                          <tr>
+                            <th className="px-2 py-3 font-black uppercase tracking-widest text-center w-8 opacity-80">#</th>
+                            <th className="px-3 py-3 font-black uppercase tracking-widest w-[35%]">Keywords</th>
+                            <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Volume</th>
+                            <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Sales</th>
+                            <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Comp.</th>
+                            <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Title D.</th>
+                            <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Cl. Share</th>
+                            <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Cv. Share</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(report.topRelatedKeywordsList || []).map((kw, idx) => (
+                            <tr key={idx} className="border-b border-slate-100 last:border-0 even:bg-slate-50/60 hover:bg-indigo-50/40 transition-colors">
+                              <td className="px-2 py-2.5 font-black text-slate-400 text-center">{idx + 1}</td>
+                              <td className="px-3 py-2.5 font-black text-slate-900 break-words leading-tight">
+                                {kw.keyword ? (
+                                  <a
+                                    href={`https://www.amazon.com/s?k=${encodeURIComponent(kw.keyword)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="capitalize hover:text-indigo-600 hover:underline decoration-indigo-500/30 transition-all cursor-pointer"
+                                    title={`Search "${kw.keyword}" on Amazon`}
+                                  >
+                                    {kw.keyword}
+                                  </a>
+                                ) : '—'}
                               </td>
-                            );
-                          })}
+                              <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.searchVolume || '0'}</td>
+                              <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.salesMonthly || '0'}</td>
+                              <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.competingProducts || '0'}</td>
+                              <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.titleDensity || '0'}</td>
+                              <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.clickShare || '0%'}</td>
+                              <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.conversionShare || '0%'}</td>
+                            </tr>
+                          ))}
+                          <tr className="bg-[#1e1b4b] text-white font-black border-t-2 border-indigo-500">
+                            <td colSpan={2} className="px-3 py-3.5 text-right tracking-widest text-[10px] uppercase opacity-90 pr-6">Total / Average</td>
+                            <td className="px-2 py-3.5 text-center text-emerald-400 text-[13px]">{report.topRelatedKeywordsTotal.searchVolume}</td>
+                            <td className="px-2 py-3.5 text-center text-emerald-400 text-[13px]">{report.topRelatedKeywordsTotal.salesMonthly}</td>
+                            <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.competingProducts}</td>
+                            <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.titleDensity}</td>
+                            <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.clickShare}</td>
+                            <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.conversionShare}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="mt-3 text-[10px] text-slate-400 font-bold tracking-tight text-center uppercase">
+                      Sales are estimated on a monthly basis for each keyword.
+                    </p>
+                  </div>
+                </section>
+                <PageFooter page={nextP()} />
+              </div>
+            </>
+          );
+        } else {
+          return (
+            /* Unified Page (Both on the same page) */
+            <div className="a4-page flex flex-col h-full">
+              <PageHeader />
+              <section className="flex-1 space-y-6">
+                {/* ALL ASINS Table */}
+                {report.activeAsinsForListings && report.activeAsinsForListings.length > 0 && (
+                  <div className="w-full mb-4">
+                    <h4 className="text-sm font-black text-[#1e1b4b] mb-4 flex items-center justify-center gap-2 tracking-tight uppercase">
+                      <i className="fa-solid fa-list-check text-indigo-500"></i>
+                      All ASINs for Active Listings
+                    </h4>
+                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                      <table className="w-full border-collapse text-left text-[9.5px] table-fixed">
+                        <thead>
+                          <tr className="bg-slate-900 text-white border-b border-slate-700">
+                            {[1, 2, 3, 4, 5].map(i => (
+                              <th key={i} className="px-2 py-2.5 font-black text-white text-center uppercase tracking-widest text-[8.5px] opacity-90 border-x border-slate-800 first:border-l-0 last:border-r-0">ASIN</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            const totalAsins = report.activeAsinsForListings || [];
+                            const numRows = Math.max(5, Math.ceil(totalAsins.length / 5));
+                            return Array.from({ length: numRows }).map((_, rowIndex) => (
+                              <tr key={rowIndex} className="border-b border-slate-100 last:border-0 even:bg-slate-50/60 hover:bg-indigo-50/40 transition-colors font-bold text-slate-900">
+                                {[0, 1, 2, 3, 4].map(colIndex => {
+                                  const asinIndex = rowIndex + (colIndex * numRows);
+                                  const asin = totalAsins[asinIndex] || '';
+                                  const displayNum = asinIndex + 1;
+                                  return (
+                                    <td key={colIndex} className="p-1 text-center font-bold text-slate-900 break-all border-x border-slate-100 first:border-l-0 last:border-r-0">
+                                      <div className="flex items-center justify-between gap-1 px-1">
+                                        <span className="text-[7px] text-slate-300 w-3 shrink-0">{asin ? displayNum : ''}</span>
+                                        <span className="flex-1 text-center">
+                                          {asin ? (
+                                            <a
+                                              href={`https://www.amazon.com/dp/${asin.trim()}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-slate-700 hover:text-indigo-600 transition-colors"
+                                            >
+                                              {asin}
+                                            </a>
+                                          ) : '—'}
+                                        </span>
+                                      </div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ));
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+                    4. Keyword Analysis
+                  </h2>
+                </div>
+
+                {/* Top Related Keywords Table */}
+                <div className="w-full mt-4">
+                  <h4 className="text-sm font-black text-[#1e1b4b] mb-4 flex items-center justify-center gap-2 tracking-tight uppercase">
+                    <i className="fa-solid fa-tags text-indigo-500"></i>
+                    Top Related Keywords
+                  </h4>
+                  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                    <table className="w-full border-collapse text-left text-[11px] leading-tight table-fixed font-medium">
+                      <thead className="bg-slate-900 text-white">
+                        <tr>
+                          <th className="px-2 py-3 font-black uppercase tracking-widest text-center w-8 opacity-80">#</th>
+                          <th className="px-3 py-3 font-black uppercase tracking-widest w-[35%]">Keywords</th>
+                          <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Volume</th>
+                          <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Sales</th>
+                          <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Comp.</th>
+                          <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Title D.</th>
+                          <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Cl. Share</th>
+                          <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Cv. Share</th>
                         </tr>
-                      ));
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-            <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest">
-              4. Keyword Analysis
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-emerald-50/30 border border-emerald-100 p-2.5 rounded-xl shadow-sm relative overflow-hidden group">
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-1.5">
-                  <div className="w-6 h-6 rounded bg-emerald-600 text-white flex items-center justify-center shadow-sm">
-                    <i className="fa-solid fa-magnifying-glass-dollar text-[9px]"></i>
+                      </thead>
+                      <tbody>
+                        {(report.topRelatedKeywordsList || []).map((kw, idx) => (
+                          <tr key={idx} className="border-b border-slate-100 last:border-0 even:bg-slate-50/60 hover:bg-indigo-50/40 transition-colors">
+                            <td className="px-2 py-2.5 font-black text-slate-400 text-center">{idx + 1}</td>
+                            <td className="px-3 py-2.5 font-black text-slate-900 break-words leading-tight">
+                              {kw.keyword ? (
+                                <a
+                                  href={`https://www.amazon.com/s?k=${encodeURIComponent(kw.keyword)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="capitalize hover:text-indigo-600 hover:underline decoration-indigo-500/30 transition-all cursor-pointer"
+                                  title={`Search "${kw.keyword}" on Amazon`}
+                                >
+                                  {kw.keyword}
+                                </a>
+                              ) : '—'}
+                            </td>
+                            <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.searchVolume || '0'}</td>
+                            <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.salesMonthly || '0'}</td>
+                            <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.competingProducts || '0'}</td>
+                            <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.titleDensity || '0'}</td>
+                            <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.clickShare || '0%'}</td>
+                            <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.conversionShare || '0%'}</td>
+                          </tr>
+                        ))}
+                        <tr className="bg-[#1e1b4b] text-white font-black border-t-2 border-indigo-500">
+                          <td colSpan={2} className="px-3 py-3.5 text-right tracking-widest text-[10px] uppercase opacity-90 pr-6">Total / Average</td>
+                          <td className="px-2 py-3.5 text-center text-emerald-400 text-[13px]">{report.topRelatedKeywordsTotal.searchVolume}</td>
+                          <td className="px-2 py-3.5 text-center text-emerald-400 text-[13px]">{report.topRelatedKeywordsTotal.salesMonthly}</td>
+                          <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.competingProducts}</td>
+                          <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.titleDensity}</td>
+                          <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.clickShare}</td>
+                          <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.conversionShare}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-                  <h4 className="text-[8.5px] font-black text-slate-500 uppercase tracking-widest leading-none">High-Intent Keywords</h4>
+                  <p className="mt-3 text-[10px] text-slate-400 font-bold tracking-tight text-center uppercase">
+                    Sales are estimated on a monthly basis for each keyword.
+                  </p>
                 </div>
-                <div className="text-[13px] font-black text-emerald-900 leading-tight">
-                  {report.highIntentBuyerKeywords || 'No data provided.'}
-                </div>
-              </div>
+              </section>
+              <PageFooter page={nextP()} />
             </div>
-
-            <div className="bg-indigo-50/30 border border-indigo-100 p-2.5 rounded-xl shadow-sm relative overflow-hidden group">
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-1.5">
-                  <div className="w-6 h-6 rounded bg-indigo-600 text-white flex items-center justify-center shadow-sm">
-                    <i className="fa-solid fa-chart-pie text-[9px]"></i>
-                  </div>
-                  <h4 className="text-[8.5px] font-black text-slate-500 uppercase tracking-widest leading-none">Long-Tail Opportunities</h4>
-                </div>
-                <div className="text-[13px] font-black text-indigo-900 leading-tight">
-                  {report.longTailOpportunities || 'No data provided.'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Top Related Keywords Table */}
-          <div className="w-full mt-4">
-            <h4 className="text-sm font-black text-[#1e1b4b] mb-4 flex items-center justify-center gap-2 tracking-tight uppercase">
-              <i className="fa-solid fa-tags text-indigo-500"></i>
-              Top Related Keywords
-            </h4>
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <table className="w-full border-collapse text-left text-[11px] leading-tight table-fixed font-medium">
-                <thead className="bg-slate-900 text-white">
-                  <tr>
-                    <th className="px-2 py-3 font-black uppercase tracking-widest text-center w-8 opacity-80">#</th>
-                    <th className="px-3 py-3 font-black uppercase tracking-widest w-[35%]">Keywords</th>
-                    <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Volume</th>
-                    <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Sales</th>
-                    <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Comp.</th>
-                    <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Title D.</th>
-                    <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Cl. Share</th>
-                    <th className="px-2 py-3 font-black uppercase tracking-widest text-center">Cv. Share</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.topRelatedKeywordsList.map((kw, idx) => (
-                    <tr key={idx} className="border-b border-slate-100 last:border-0 even:bg-slate-50/60 hover:bg-indigo-50/40 transition-colors">
-                      <td className="px-2 py-2.5 font-black text-slate-400 text-center">{idx + 1}</td>
-                      <td className="px-3 py-2.5 font-black text-slate-900 break-words leading-tight">
-                        {kw.keyword ? (
-                          <a
-                            href={`https://www.amazon.com/s?k=${encodeURIComponent(kw.keyword)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="capitalize hover:text-indigo-600 hover:underline decoration-indigo-500/30 transition-all cursor-pointer"
-                            title={`Search "${kw.keyword}" on Amazon`}
-                          >
-                            {kw.keyword}
-                          </a>
-                        ) : '—'}
-                      </td>
-                      <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.searchVolume || '0'}</td>
-                      <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.salesMonthly || '0'}</td>
-                      <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.competingProducts || '0'}</td>
-                      <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.titleDensity || '0'}</td>
-                      <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.clickShare || '0%'}</td>
-                      <td className="px-2 py-2.5 font-bold text-slate-700 text-center">{kw.conversionShare || '0%'}</td>
-                    </tr>
-                  ))}
-                  {/* Summary Row */}
-                  <tr className="bg-[#1e1b4b] text-white font-black border-t-2 border-indigo-500">
-                    <td colSpan={2} className="px-3 py-3.5 text-right tracking-widest text-[10px] uppercase opacity-90 pr-6">Total / Average</td>
-                    <td className="px-2 py-3.5 text-center text-emerald-400 text-[13px]">{report.topRelatedKeywordsTotal.searchVolume}</td>
-                    <td className="px-2 py-3.5 text-center text-emerald-400 text-[13px]">{report.topRelatedKeywordsTotal.salesMonthly}</td>
-                    <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.competingProducts}</td>
-                    <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.titleDensity}</td>
-                    <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.clickShare}</td>
-                    <td className="px-2 py-3.5 text-center text-[13px]">{report.topRelatedKeywordsTotal.conversionShare}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-3 text-[10px] text-slate-400 font-bold tracking-tight text-center">
-              Sales are estimated on a monthly basis for each keyword.
-            </p>
-          </div>
-        </section>
-        <PageFooter page={3} />
-      </div>
+          );
+        }
+      })()}
 
       {/* --- PAGE 7: REVIEW ANALYSIS --- */}
       <div className="a4-page flex flex-col h-full">
@@ -920,7 +1070,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
             </div>
           </div>
         </section>
-        <PageFooter page={4} />
+        <PageFooter page={nextP()} />
       </div>
 
       {/* --- PAGE 8: NICHE ANALYSIS & PROFITABILITY --- */}
@@ -1115,7 +1265,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
             </div>
           </div>
         </section>
-        <PageFooter page={5} />
+        <PageFooter page={nextP()} />
       </div>
 
       {/* --- PAGE 6: FINANCIAL METRICS EXPLAINED --- */}
@@ -1359,7 +1509,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
             </div>
           </div>
         </section>
-        <PageFooter page={7} />
+        <PageFooter page={nextP()} />
       </div>
 
       {/* --- PAGE 13: EXECUTION STRATEGY & VALUE --- */}
@@ -1420,7 +1570,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
 
 
         </section>
-        <PageFooter page={11} />
+        <PageFooter page={nextP()} />
       </div>
 
       {/* --- PAGE 13: TECHNICAL DATA VERIFICATION (Part 1) --- */}
@@ -1466,7 +1616,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
             ))}
           </div>
         </section>
-        <PageFooter page={12} />
+        <PageFooter page={nextP()} />
       </div>
 
       {/* --- PAGE 14: TECHNICAL DATA VERIFICATION (Part 2) --- */}
@@ -1512,7 +1662,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
             ))}
           </div>
         </section>
-        <PageFooter page={13} />
+        <PageFooter page={nextP()} />
       </div>
 
       {/* --- PAGE 15: REGULATORY REFERENCE & DISCLAIMER --- */}
@@ -1630,7 +1780,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
             </div>
           </section>
         </div>
-        <PageFooter page={14} />
+        <PageFooter page={nextP()} />
       </div>
 
       {/* --- PAGE 16: THE VALUE BEHIND THIS ANALYSIS (FINAL PAGE) --- */}
@@ -1771,7 +1921,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
           </div>
         </section>
 
-        <PageFooter page={16} />
+        <PageFooter page={nextP()} />
       </div>
     </div>
   );

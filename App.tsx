@@ -1504,30 +1504,7 @@ const App: React.FC = () => {
                   <span className="bg-amber-100 text-amber-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">5</span>
                   Keyword Analysis
                 </h2>
-                <div className="p-8 rounded-[2.5rem] bg-emerald-50/20 border border-emerald-100 space-y-8">
-                  <div className="space-y-6">
-                    <InputGroup label="High-Intent Buyer Keywords" icon="fa-magnifying-glass-dollar">
-                      <input
-                        type="text"
-                        name="highIntentBuyerKeywords"
-                        value={report.highIntentBuyerKeywords || ''}
-                        onChange={handleInputChange}
-                        placeholder="Paste top keywords here... (max 6 words)"
-                        className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl font-bold leading-relaxed focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all shadow-sm"
-                      />
-                    </InputGroup>
-                    <InputGroup label="Long-Tail Opportunities" icon="fa-chart-pie">
-                      <input
-                        type="text"
-                        name="longTailOpportunities"
-                        value={report.longTailOpportunities || ''}
-                        onChange={handleInputChange}
-                        placeholder="Paste long-tail keywords here... (max 6 words)"
-                        className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl font-bold leading-relaxed focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all shadow-sm"
-                      />
-                    </InputGroup>
-                  </div>
-                </div>
+
 
                 {/* Top Related Keywords Table */}
                 <div className="mt-8 p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 overflow-x-auto relative group">
