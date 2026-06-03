@@ -650,7 +650,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
       {(() => {
         const activeAsinsCount = (report.activeAsinsForListings || []).length;
         const topKeywordsCount = (report.topRelatedKeywordsList || []).length;
-        const shouldSeparate = activeAsinsCount > 40 && topKeywordsCount > 15;
+        const shouldSeparate = topKeywordsCount > 18 && activeAsinsCount > 0;
 
         if (shouldSeparate) {
           return (
