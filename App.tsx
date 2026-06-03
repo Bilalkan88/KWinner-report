@@ -660,18 +660,18 @@ const App: React.FC = () => {
       if (cells.length === 1) cells = row.split(/[ ]{3,}/);
       if (cells.length === 1) cells = row.split(',');
 
-      const lDate = cells[8]?.trim() || '';
+      const lDate = cells[7]?.trim() || '';
       return {
         asin: cells[0]?.trim() || '',
         brand: cells[1]?.trim() || '',
         avgUnitSales: cells[2]?.trim() || '',
         clickCount: cells[3]?.trim() || '',
         clickShare: cells[4]?.trim() || '',
-        conversionShare: cells[5]?.trim() || '',
-        avgSellingPrice: cells[6]?.trim() || '',
-        numberOfReviews: cells[7]?.trim() || '',
+        conversionShare: '', // Not in UI table
+        avgSellingPrice: cells[5]?.trim() || '',
+        numberOfReviews: cells[6]?.trim() || '',
         launchDate: lDate,
-        listingAge: cells[9]?.trim() || calculateListingAge(lDate)
+        listingAge: cells[8]?.trim() || calculateListingAge(lDate)
       };
     });
 
