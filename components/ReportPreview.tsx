@@ -86,8 +86,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ report }) => {
     if (!report.topCompetitorsList || report.topCompetitorsList.length === 0) return '0%';
     const top5 = report.topCompetitorsList.slice(0, 5);
     const sum = top5.reduce((acc, comp) => {
-      const val = comp.clickShare ? String(comp.clickShare).replace('%', '') : '0';
-      return acc + parseFloat(val || '0');
+      const val = comp.clickShare ? String(comp.clickShare).replace('%', '').replace(',', '.').trim() : '0';
+      const parsed = parseFloat(val);
+      return acc + (isNaN(parsed) ? 0 : parsed);
     }, 0);
     return sum > 0 ? `${sum.toFixed(1)}%` : '0%';
   };

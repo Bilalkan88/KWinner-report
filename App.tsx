@@ -287,6 +287,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [newCompetitorUrl, setNewCompetitorUrl] = useState('');
   const [newRelatedKeyword, setNewRelatedKeyword] = useState('');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const lastIndex = localStorage.getItem(REPORT_INDEX_KEY);
@@ -770,7 +771,8 @@ const App: React.FC = () => {
 
   const formatPercentage = (val: string) => {
     if (!val.trim()) return '';
-    const num = val.replace(/[^0-9.]/g, '');
+    const clean = val.replace(',', '.');
+    const num = clean.replace(/[^0-9.]/g, '');
     if (!num) return '';
     return `${num}%`;
   };
@@ -891,6 +893,50 @@ const App: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const exportJSON = () => {
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(report, null, 2)
+    )}`;
+    const link = document.createElement("a");
+    link.setAttribute("href", jsonString);
+    link.setAttribute("download", `KW_Report_Data_${(report.keyword || 'export').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${report.reportNumber || ''}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        if (parsed && typeof parsed === 'object') {
+          setReport(prev => ({
+            ...INITIAL_REPORT,
+            ...parsed
+          }));
+          alert('Report imported successfully!');
+        } else {
+          alert('Invalid file format.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to parse file. Make sure it is a valid JSON file.');
+      }
+    };
+    reader.readAsText(file);
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  const triggerImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handlePrint = () => {
     setActiveTab('preview');
     const oldTitle = document.title;
@@ -981,6 +1027,31 @@ const App: React.FC = () => {
               <i className="fa-solid fa-eye mr-2"></i> Preview
             </button>
             <div className="w-px h-6 bg-slate-200 mx-2"></div>
+            
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportJSON}
+              accept=".json"
+              className="hidden"
+            />
+            
+            <button
+              onClick={triggerImportClick}
+              className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-sm font-bold transition-all flex items-center gap-2"
+              title="Import Data File"
+            >
+              <i className="fa-solid fa-file-import"></i> Import Data
+            </button>
+            
+            <button
+              onClick={exportJSON}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-bold transition-all flex items-center gap-2"
+              title="Export Data File"
+            >
+              <i className="fa-solid fa-file-export"></i> Export Data
+            </button>
+
             <button
               onClick={handlePrint}
               className="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-200"
@@ -2146,8 +2217,16 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-8 border-t border-slate-100 flex justify-center">
-                <button onClick={exportCSV} className="text-slate-500 hover:text-slate-900 transition-all text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
+              <div className="pt-8 border-t border-slate-100 flex flex-col items-center gap-4 justify-center">
+                <div className="flex gap-4">
+                  <button onClick={triggerImportClick} className="px-5 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-xs font-black uppercase tracking-[0.1em] flex items-center gap-2 transition-all">
+                    <i className="fa-solid fa-file-import"></i> Import Data (JSON)
+                  </button>
+                  <button onClick={exportJSON} className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-[0.1em] flex items-center gap-2 transition-all">
+                    <i className="fa-solid fa-file-export"></i> Export Data (JSON)
+                  </button>
+                </div>
+                <button onClick={exportCSV} className="text-slate-400 hover:text-slate-600 transition-all text-xs font-bold uppercase tracking-[0.1em] flex items-center gap-2">
                   <i className="fa-solid fa-file-csv"></i> Export Raw CSV Data
                 </button>
               </div>
